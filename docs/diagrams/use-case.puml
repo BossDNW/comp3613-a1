@@ -1,0 +1,42 @@
+@startuml
+!pragma layout smetana
+left to right direction
+skinparam shadowing false
+skinparam actorBorderColor #1B365D
+skinparam actorFontColor #1E232D
+skinparam usecaseBackgroundColor #FFFFFF
+skinparam usecaseBorderColor #1B365D
+skinparam usecaseFontColor #1E232D
+skinparam rectangleBorderColor #1B365D
+skinparam rectangleBackgroundColor #F8FAFC
+skinparam arrowColor #1B365D
+
+actor "Student" as Student
+
+rectangle "Student Accommodation" {
+  usecase "Search & Filter Accommodation" as Search_Filter_Accommodation
+  usecase "Request Accommodation Booking" as Request_Accommodation_Booking
+  usecase "Manage Accommodation Listings" as Manage_Accommodation_Listings
+  usecase "Create Accommodation Listing" as Create_Accommodation_Listing
+  usecase "Edit Accommodation Listing" as Edit_Accommodation_Listing
+  usecase "Deactivate Accommodation Listing" as Deactivate_Accommodation_Listing
+  usecase "Manage Booking Requests" as Manage_Booking_Requests
+  usecase "View Booking Request" as View_Booking_Request
+  usecase "Approve Booking Request" as Approve_Booking_Request
+  usecase "Reject Booking Request" as Reject_Booking_Request
+}
+
+actor "Landlord" as Landlord
+
+Student --> Search_Filter_Accommodation
+Student --> Request_Accommodation_Booking
+Manage_Accommodation_Listings <-- Landlord
+Create_Accommodation_Listing ..> Manage_Accommodation_Listings : <<extend>>
+Edit_Accommodation_Listing ..> Manage_Accommodation_Listings : <<extend>>
+Deactivate_Accommodation_Listing ..> Manage_Accommodation_Listings : <<extend>>
+Manage_Booking_Requests <-- Landlord
+View_Booking_Request ..> Manage_Booking_Requests : <<extend>>
+Approve_Booking_Request ..> View_Booking_Request : <<extend>>
+Reject_Booking_Request ..> View_Booking_Request : <<extend>>
+
+@enduml

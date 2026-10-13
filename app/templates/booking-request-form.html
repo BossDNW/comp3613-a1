@@ -1,0 +1,71 @@
+{% extends "accommodation-base.html" %}
+{% block title %}Request to Book{% endblock %}
+
+{% block marketplace_content %}
+<a class="back-link detail-back" href="{{ url_for('listing_detail_view', listing_id=listing.id) }}">
+  <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+  Back to listing
+</a>
+
+<div class="booking-form-layout">
+  <section class="booking-listing-summary">
+    {% if photos %}
+    <img class="booking-summary-photo" src="{{ photos[0].image_url }}" alt="{{ listing.title }}">
+    {% else %}
+    <div class="booking-summary-placeholder">
+      <span class="material-symbols-outlined" aria-hidden="true">home_work</span>
+    </div>
+    {% endif %}
+    <h1>{{ listing.bedrooms }} Bedroom{% if listing.bedrooms != 1 %}s{% endif %} Accommodation</h1>
+    <p>{{ listing.suburb }}, {{ listing.city }}</p>
+    <strong>TT$ {{ "%.0f"|format(listing.price_per_month) }} / month</strong>
+    <small>{{ listing.bedrooms }} Bedroom, {{ listing.bathrooms }} Bathroom{% if listing.furnished %}, Furnished{% endif %}</small>
+  </section>
+
+  <section class="booking-form-panel">
+    <h2>Request to Book</h2>
+    {% if error %}
+    <div class="alert alert-danger" role="alert">{{ error }}</div>
+    {% endif %}
+    <form method="post" action="{{ url_for('create_booking_request', listing_id=listing.id) }}">
+      <div class="booking-date-grid">
+        <div class="filter-field">
+          <label for="move-in-date">Move-in Date <span aria-hidden="true">*</span></label>
+          <input class="form-control" id="move-in-date" name="move_in_date" type="date" required
+                 min="{{ listing.available_from.isoformat() if listing.available_from else '' }}"
+                 value="{{ booking_request.move_in_date.isoformat() if booking_request else '' }}">
+          {% if listing.available_from %}
+          <small class="form-text">Available from {{ listing.available_from }}</small>
+          {% endif %}
+        </div>
+        <div class="filter-field">
+          <label for="move-out-date">Move-out Date <span class="text-muted">(Optional)</span></label>
+          <input class="form-control" id="move-out-date" name="move_out_date" type="date"
+                 value="{{ booking_request.move_out_date.isoformat() if booking_request and booking_request.move_out_date else '' }}">
+        </div>
+      </div>
+
+      <div class="filter-field">
+        <label for="occupants">Number of Occupants <span aria-hidden="true">*</span></label>
+        <select class="form-select" id="occupants" name="occupants" required>
+          {% for count in range(1, 6) %}
+          <option value="{{ count }}" {% if (booking_request.occupants if booking_request else 1) == count %}selected{% endif %}>
+            {{ count }}{% if count == 5 %}+{% endif %}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label for="booking-message">Message to Landlord <span class="text-muted">(Optional)</span></label>
+        <textarea class="form-control" id="booking-message" name="message" rows="5" maxlength="2000">{{ booking_request.message if booking_request else '' }}</textarea>
+      </div>
+
+      <div class="booking-form-actions">
+        <a class="btn btn-outline-secondary" href="{{ url_for('listing_detail_view', listing_id=listing.id) }}">Cancel</a>
+        <button class="btn btn-primary" type="submit">Send Request</button>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}

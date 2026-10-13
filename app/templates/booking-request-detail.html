@@ -1,0 +1,76 @@
+{% extends "accommodation-base.html" %}
+{% block title %}Booking Request{% endblock %}
+
+{% block marketplace_content %}
+<a class="back-link detail-back" href="{{ url_for('student_booking_requests') }}">
+  <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+  Back to dashboard
+</a>
+
+<div class="booking-form-layout">
+  <section class="booking-listing-summary">
+    {% if photos %}
+    <img class="booking-summary-photo" src="{{ photos[0].image_url }}" alt="{{ listing.title }}">
+    {% else %}
+    <div class="booking-summary-placeholder">
+      <span class="material-symbols-outlined" aria-hidden="true">home_work</span>
+    </div>
+    {% endif %}
+    <h1>{{ listing.bedrooms }} Bedroom{% if listing.bedrooms != 1 %}s{% endif %} Accommodation</h1>
+    <p>{{ listing.suburb }}, {{ listing.city }}</p>
+    <strong>TT$ {{ "%.0f"|format(listing.price_per_month) }} / month</strong>
+    <small>{{ listing.bedrooms }} Bedroom, {{ listing.bathrooms }} Bathroom{% if listing.furnished %}, Furnished{% endif %}</small>
+  </section>
+
+  <section class="booking-form-panel">
+    {% if booking_request.status == "pending" %}
+    <h1>Request to Book</h1>
+    {% else %}
+    <h1>Booking Request</h1>
+    {% endif %}
+    {% if error %}
+    <div class="alert alert-danger" role="alert">{{ error }}</div>
+    {% endif %}
+
+    {% if booking_request.status == "pending" %}
+    <form method="post" action="{{ url_for('update_student_booking_request', booking_request_id=booking_request.id) }}">
+    {% endif %}
+      <div class="booking-date-grid">
+        <div class="filter-field">
+          <label for="move-in-date">Move-in Date</label>
+          <input class="form-control" id="move-in-date" name="move_in_date" type="date"
+                 value="{{ booking_request.move_in_date.isoformat() }}" {% if booking_request.status != "pending" %}disabled{% else %}required min="{{ listing.available_from.isoformat() if listing.available_from else '' }}"{% endif %}>
+        </div>
+        <div class="filter-field">
+          <label for="move-out-date">Move-out Date <span class="text-muted">(Optional)</span></label>
+          <input class="form-control" id="move-out-date" name="move_out_date" type="date"
+                 value="{{ booking_request.move_out_date.isoformat() if booking_request.move_out_date else '' }}" {% if booking_request.status != "pending" %}disabled{% endif %}>
+        </div>
+      </div>
+      <div class="filter-field">
+        <label for="occupants">Number of Occupants</label>
+        <select class="form-select" id="occupants" name="occupants" {% if booking_request.status != "pending" %}disabled{% endif %}>
+          {% for count in range(1, 6) %}
+          <option value="{{ count }}" {% if booking_request.occupants == count %}selected{% endif %}>{{ count }}{% if count == 5 %}+{% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="booking-message">Message to Landlord <span class="text-muted">(Optional)</span></label>
+        <textarea class="form-control" id="booking-message" name="message" rows="5" maxlength="2000" {% if booking_request.status != "pending" %}disabled{% endif %}>{{ booking_request.message }}</textarea>
+      </div>
+
+      {% if booking_request.status == "pending" %}
+      <div class="booking-form-actions">
+        <button class="btn btn-outline-secondary" type="submit" formaction="{{ url_for('cancel_student_booking_request', booking_request_id=booking_request.id) }}" formnovalidate>Cancel Request</button>
+        <button class="btn btn-primary" type="submit">Update Request</button>
+      </div>
+    </form>
+    {% else %}
+    <div class="request-readonly-status">
+      Status: <strong class="request-status status-{{ booking_request.status|lower }}">{{ booking_request.status|title }}</strong>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

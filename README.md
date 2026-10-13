@@ -148,7 +148,7 @@ python manage.py init
 python manage.py run
 ```
 
-The app binds `0.0.0.0` and reads `PORT` when Render sets it. Locally it uses `APP_PORT` (default **5000**).
+The app binds `0.0.0.0` and reads `PORT` when Render sets it. Locally it uses `APP_PORT` (default **5000**); open `http://127.0.0.1:<port>` in your browser rather than navigating to the bind address `0.0.0.0`.
 
 ---
 

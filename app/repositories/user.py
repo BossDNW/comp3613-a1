@@ -1,4 +1,6 @@
-from sqlmodel import Session, select, func
+from sqlmodel import Session, delete, func, or_, select
+from app.models.booking_request import BookingRequest
+from app.models.listing import Listing, ListingAmenity, ListingPhoto
 from app.models.user import UserBase, User
 from typing import Optional, Tuple
 from app.utilities.pagination import Pagination
@@ -63,6 +65,64 @@ class UserRepository:
             return user
         except Exception as e:
             logger.error(f"An error occurred while updating user: {e}")
+            self.db.rollback()
+            raise
+
+    def update_profile(
+        self,
+        user_id: int,
+        *,
+        full_name: str,
+        password_hash: str | None = None,
+    ) -> User | None:
+        user = self.db.get(User, user_id)
+        if user is None:
+            return None
+
+        user.full_name = full_name
+        if password_hash is not None:
+            user.password = password_hash
+        try:
+            self.db.add(user)
+            self.db.commit()
+            self.db.refresh(user)
+            return user
+        except Exception as exc:
+            logger.error("An error occurred while updating profile: %s", exc)
+            self.db.rollback()
+            raise
+
+    def delete_account(self, user_id: int) -> bool:
+        user = self.db.get(User, user_id)
+        if user is None:
+            return False
+
+        listing_ids = self.db.exec(
+            select(Listing.id).where(Listing.landlord_id == user_id)
+        ).all()
+        try:
+            self.db.exec(
+                delete(BookingRequest).where(
+                    or_(
+                        BookingRequest.student_id == user_id,
+                        BookingRequest.listing_id.in_(listing_ids),
+                    )
+                )
+            )
+            self.db.exec(
+                delete(ListingPhoto).where(ListingPhoto.listing_id.in_(listing_ids))
+            )
+            self.db.exec(
+                delete(ListingAmenity).where(
+                    ListingAmenity.listing_id.in_(listing_ids)
+                )
+            )
+            self.db.exec(delete(Listing).where(Listing.id.in_(listing_ids)))
+            self.db.delete(user)
+            self.db.commit()
+            return True
+        except Exception as exc:
+            logger.error("An error occurred while deleting account: %s", exc)
             self.db.rollback()
             raise
 

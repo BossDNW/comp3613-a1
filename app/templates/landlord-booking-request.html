@@ -1,0 +1,66 @@
+{% extends "accommodation-base.html" %}
+{% block title %}Booking Request{% endblock %}
+
+{% block marketplace_content %}
+<a class="back-link detail-back" href="{{ url_for('landlord_dashboard') }}">
+  <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+  Back to dashboard
+</a>
+
+{% if error %}
+<div class="alert alert-danger" role="alert">{{ error }}</div>
+{% endif %}
+
+<section class="landlord-request-layout">
+  <article class="landlord-request-property">
+    {% if photos %}
+    <img class="landlord-request-photo" src="{{ photos[0].image_url }}" alt="{{ listing.title }}">
+    {% else %}
+    <div class="landlord-request-photo landlord-request-photo-empty">
+      <span class="material-symbols-outlined" aria-hidden="true">home_work</span>
+    </div>
+    {% endif %}
+    <h1>{{ listing.title }}</h1>
+    <p>{{ listing.suburb }}, {{ listing.city }}</p>
+    <strong>TT$ {{ "%.2f"|format(listing.price_per_month) }} / month</strong>
+    {% if amenities %}
+    <div class="amenity-list">
+      {% for amenity in amenities %}
+      <span>{{ amenity.name }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <a class="btn btn-outline-primary" href="{{ url_for('edit_landlord_listing', listing_id=listing.id) }}">Edit Listing</a>
+  </article>
+
+  <article class="landlord-request-panel">
+    <p class="dashboard-eyebrow">Booking request</p>
+    <h1>Request from {{ student.full_name or student.username }}</h1>
+    <p class="landlord-request-contact">{{ student.email }}</p>
+
+    <dl class="landlord-request-details">
+      <div><dt>Move-in date</dt><dd>{{ booking_request.move_in_date }}</dd></div>
+      <div><dt>Move-out date</dt><dd>{{ booking_request.move_out_date or "Not specified" }}</dd></div>
+      <div><dt>Number of occupants</dt><dd>{{ booking_request.occupants }}</dd></div>
+      <div>
+        <dt>Status</dt>
+        <dd><span class="request-status status-{{ booking_request.status|lower }}">{{ booking_request.status|title }}</span></dd>
+      </div>
+    </dl>
+
+    <section class="landlord-message">
+      <h2>Message to landlord</h2>
+      <p>{{ booking_request.message or "No message was included." }}</p>
+    </section>
+
+    {% if booking_request.status == "pending" %}
+    <form method="post" action="{{ url_for('decide_landlord_booking_request', booking_request_id=booking_request.id) }}" class="landlord-decision-actions">
+      <button class="btn btn-outline-danger" type="submit" name="decision" value="rejected" onclick="return confirm('Reject this booking request?')">Reject</button>
+      <button class="btn btn-primary" type="submit" name="decision" value="accepted">Accept</button>
+    </form>
+    {% else %}
+    <p class="landlord-decision-note">This request has been {{ booking_request.status }} and can no longer be changed.</p>
+    {% endif %}
+  </article>
+</section>
+{% endblock %}

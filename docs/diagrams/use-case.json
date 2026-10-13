@@ -1,0 +1,49 @@
+{
+  "system": "Student Accommodation",
+  "actors": [
+    {"name": "Student", "side": "left"},
+    {"name": "Landlord", "side": "right"}
+  ],
+  "use_cases": [
+    {
+      "name": "Search & Filter Accommodation",
+      "actors": ["Student"]
+    },
+    {
+      "name": "Request Accommodation Booking",
+      "actors": ["Student"]
+    },
+    {
+      "name": "Manage Accommodation Listings",
+      "actors": ["Landlord"]
+    },
+    {
+      "name": "Create Accommodation Listing",
+      "extends": ["Manage Accommodation Listings"]
+    },
+    {
+      "name": "Edit Accommodation Listing",
+      "extends": ["Manage Accommodation Listings"]
+    },
+    {
+      "name": "Deactivate Accommodation Listing",
+      "extends": ["Manage Accommodation Listings"]
+    },
+    {
+      "name": "Manage Booking Requests",
+      "actors": ["Landlord"]
+    },
+    {
+      "name": "View Booking Request",
+      "extends": ["Manage Booking Requests"]
+    },
+    {
+      "name": "Approve Booking Request",
+      "extends": ["View Booking Request"]
+    },
+    {
+      "name": "Reject Booking Request",
+      "extends": ["View Booking Request"]
+    }
+  ]
+}

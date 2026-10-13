@@ -1,0 +1,109 @@
+{% extends "accommodation-base.html" %}
+{% block title %}{{ listing.title }}{% endblock %}
+
+{% block marketplace_content %}
+<a class="back-link detail-back" href="{{ back_url }}">
+  <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+  Back to results
+</a>
+
+<div class="listing-detail-layout">
+  <section class="detail-gallery" aria-label="Listing photos" data-gallery>
+    <div class="gallery-main">
+      {% if photos %}
+      <img data-gallery-main src="{{ photos[0].image_url }}" alt="{{ listing.title }}">
+      {% for direction in ["previous", "next"] %}
+      <button class="gallery-arrow gallery-{{ direction }}" type="button" data-gallery-{{ direction }} aria-label="{{ direction|title }} photo">
+        <span class="material-symbols-outlined" aria-hidden="true">{{ "chevron_left" if direction == "previous" else "chevron_right" }}</span>
+      </button>
+      {% endfor %}
+      {% else %}
+      <div class="gallery-placeholder">
+        <span class="material-symbols-outlined" aria-hidden="true">home_work</span>
+      </div>
+      {% endif %}
+    </div>
+    <div class="gallery-thumbnails">
+      {% if photos %}
+      {% for photo in photos %}
+      <button type="button" class="gallery-thumbnail{% if loop.first %} active{% endif %}" data-gallery-photo="{{ photo.image_url }}" aria-label="Show photo {{ loop.index }}">
+        <img src="{{ photo.image_url }}" alt="">
+      </button>
+      {% endfor %}
+      {% else %}
+      <div class="gallery-thumbnail-placeholder"></div>
+      <div class="gallery-thumbnail-placeholder"></div>
+      <div class="gallery-thumbnail-placeholder"></div>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="listing-detail-copy">
+    <h1>{{ listing.title }}</h1>
+    <p class="listing-location detail-location">
+      <span class="material-symbols-outlined" aria-hidden="true">location_on</span>
+      {{ listing.city }}{% if listing.suburb %}, {{ listing.suburb }}{% endif %}
+    </p>
+    <p class="detail-price">TT$ {{ "%.0f"|format(listing.price_per_month) }} <span>/ month</span></p>
+    <p class="detail-specs">{{ listing.bedrooms }} bedroom{% if listing.bedrooms != 1 %}s{% endif %}, {{ listing.bathrooms }} bathroom{% if listing.bathrooms != 1 %}s{% endif %}{% if listing.furnished %}, furnished{% endif %}</p>
+
+    <div class="detail-section">
+      <h2>Description</h2>
+      <p>{{ listing.description or "No description has been added for this accommodation." }}</p>
+    </div>
+
+    <div class="detail-section">
+      <h2>Amenities</h2>
+      {% if amenities %}
+      <div class="amenity-list">
+        {% for amenity in amenities %}
+        <span>{{ amenity.name }}</span>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-muted">No amenities listed.</p>
+      {% endif %}
+    </div>
+  </section>
+</div>
+
+<section class="landlord-card">
+  <div class="landlord-avatar">
+    <span class="material-symbols-outlined" aria-hidden="true">account_circle</span>
+  </div>
+  <div class="landlord-info">
+    <strong>{{ landlord.username if landlord else "Landlord" }}</strong>
+    <span>Landlord</span>
+  </div>
+  {% if user.role == "landlord" %}
+  <p class="landlord-booking-note">Landlord accounts can manage booking requests from My Listings.</p>
+  {% else %}
+  <a class="btn btn-primary" href="{{ url_for('booking_request_form', listing_id=listing.id) }}">Request Booking</a>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block marketplace_scripts %}
+<script>
+  document.querySelectorAll("[data-gallery]").forEach((gallery) => {
+    const mainPhoto = gallery.querySelector("[data-gallery-main]");
+    const thumbnails = Array.from(gallery.querySelectorAll("[data-gallery-photo]"));
+    if (!mainPhoto || thumbnails.length === 0) return;
+
+    let activeIndex = 0;
+    const showPhoto = (index) => {
+      activeIndex = (index + thumbnails.length) % thumbnails.length;
+      mainPhoto.src = thumbnails[activeIndex].dataset.galleryPhoto;
+      thumbnails.forEach((thumbnail, thumbnailIndex) => {
+        thumbnail.classList.toggle("active", thumbnailIndex === activeIndex);
+      });
+    };
+
+    thumbnails.forEach((thumbnail, index) => {
+      thumbnail.addEventListener("click", () => showPhoto(index));
+    });
+    gallery.querySelector("[data-gallery-previous]").addEventListener("click", () => showPhoto(activeIndex - 1));
+    gallery.querySelector("[data-gallery-next]").addEventListener("click", () => showPhoto(activeIndex + 1));
+  });
+</script>
+{% endblock %}

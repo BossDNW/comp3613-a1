@@ -1,9 +1,79 @@
-{% extends "authenticated-base.html" %}
-{% block title %}Home{% endblock %}
+{% extends "accommodation-base.html" %}
+{% block title %}Search Accommodation{% endblock %}
 
-{% block subpage_content %}
-<div class="container-fluid py-2">
-  <h1 class="h4 mb-2">Home</h1>
-  <p class="text-muted mb-0">Workflow screens replace this shell in Phase 5 implement.</p>
+{% block marketplace_content %}
+<div class="marketplace-layout">
+  <aside class="filters-panel">
+    <h1 class="section-title">Filters</h1>
+    <form method="get" action="{{ url_for('accommodation_results_view') }}">
+      <div class="filter-field">
+        <label for="home-max-price">Maximum price per month</label>
+        <input class="form-control" id="home-max-price" name="max_price" type="number" min="0" step="50" value="{{ filters.max_price }}" placeholder="Any price">
+      </div>
+      <div class="filter-field">
+        <label for="home-available-from">Move-in date</label>
+        <input class="form-control" id="home-available-from" name="available_from" type="date" value="{{ filters.available_from }}">
+      </div>
+      <div class="filter-field">
+        <label for="home-bedrooms">Minimum bedrooms</label>
+        <input class="form-control" id="home-bedrooms" name="bedrooms" type="number" min="0" value="{{ filters.bedrooms }}" placeholder="Any">
+      </div>
+      <div class="filter-field">
+        <label for="home-bathrooms">Minimum bathrooms</label>
+        <input class="form-control" id="home-bathrooms" name="bathrooms" type="number" min="0" value="{{ filters.bathrooms }}" placeholder="Any">
+      </div>
+      <div class="filter-field">
+        <label for="home-furnished">Furnished status</label>
+        <select class="form-select" id="home-furnished" name="furnished">
+          <option value="" {% if not filters.furnished %}selected{% endif %}>Any</option>
+          <option value="true" {% if filters.furnished == "true" %}selected{% endif %}>Furnished</option>
+          <option value="false" {% if filters.furnished == "false" %}selected{% endif %}>Unfurnished</option>
+        </select>
+      </div>
+      <button class="btn btn-outline-primary w-100 mt-2" type="submit">Apply filters</button>
+    </form>
+  </aside>
+
+  <section class="search-content" aria-labelledby="home-heading">
+    <h1 class="visually-hidden" id="home-heading">Search accommodation</h1>
+    <form class="search-toolbar" method="get" action="{{ url_for('accommodation_results_view') }}">
+      <label class="visually-hidden" for="home-location">City or suburb</label>
+      <span class="material-symbols-outlined" aria-hidden="true">search</span>
+      <input id="home-location" name="location" type="search" placeholder="Search by city or suburb">
+      <button class="btn btn-primary" type="submit">Search</button>
+    </form>
+
+    <h2 class="listings-heading">Available accommodation</h2>
+    {% if listings %}
+    <div class="listing-grid">
+      {% for listing in listings %}
+      {% set card_photos = listing_photos.get(listing.id, []) if listing.id is not none else [] %}
+      <article class="listing-card">
+        <a class="listing-card-photo" href="{{ url_for('listing_detail_view', listing_id=listing.id) }}" aria-label="View {{ listing.title }}">
+          {% if card_photos %}
+          <img src="{{ card_photos[0].image_url }}" alt="{{ listing.title }}">
+          {% else %}
+          <span class="material-symbols-outlined photo-placeholder-icon" aria-hidden="true">home_work</span>
+          {% endif %}
+        </a>
+        <div class="listing-card-body">
+          <h3>{{ listing.title }}</h3>
+          <p class="listing-location">{{ listing.suburb }}, {{ listing.city }}</p>
+          <div class="listing-card-footer">
+            <strong>TT$ {{ "%.0f"|format(listing.price_per_month) }} <span>/ month</span></strong>
+            <a class="btn btn-outline-primary btn-sm" href="{{ url_for('listing_detail_view', listing_id=listing.id) }}">View Details</a>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-results">
+      <span class="material-symbols-outlined" aria-hidden="true">home_work</span>
+      <h2>No available listings yet</h2>
+      <p>Check back soon for student accommodation options.</p>
+    </div>
+    {% endif %}
+  </section>
 </div>
 {% endblock %}

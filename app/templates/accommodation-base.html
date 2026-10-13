@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block internal_css %}
+<style>
+  body {
+    min-height: 100vh;
+    background: #f5f8fc;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<header class="accommodation-nav">
+  <a class="accommodation-brand" href="{{ url_for('user_home_view') }}">
+    <span class="material-symbols-outlined" aria-hidden="true">home</span>
+    <span>UWI Home</span>
+  </a>
+  <nav class="accommodation-tabs" aria-label="Main navigation">
+    <a class="{{ 'active' if request.url.path == '/app' or request.url.path.startswith('/app/results') or request.url.path.startswith('/app/listings') else '' }}"
+       href="{{ url_for('user_home_view') }}">Home</a>
+    {% if user.role == "landlord" %}
+    <a class="{{ 'active' if request.url.path.startswith('/app/landlord') else '' }}"
+       href="{{ url_for('landlord_dashboard') }}">My Listings</a>
+    {% else %}
+    <a class="{{ 'active' if request.url.path.startswith('/app/requests') else '' }}"
+       href="{{ url_for('student_booking_requests') }}">My Requests</a>
+    {% endif %}
+  </nav>
+  <a class="accommodation-profile" href="{{ url_for('profile_page') }}" aria-label="Profile settings" title="Profile settings">
+    <span class="material-symbols-outlined" aria-hidden="true">account_circle</span>
+  </a>
+</header>
+
+<main class="accommodation-main">
+  {% for message in get_flashed_messages(request) %}
+  <div class="alert alert-{{ message.type }}" role="alert">{{ message.message }}</div>
+  {% endfor %}
+  {% block marketplace_content %}{% endblock %}
+</main>
+
+{% block marketplace_scripts %}{% endblock %}
+{% endblock %}

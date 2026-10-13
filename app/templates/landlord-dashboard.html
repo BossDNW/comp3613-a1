@@ -1,0 +1,124 @@
+{% extends "accommodation-base.html" %}
+{% block title %}Landlord Dashboard{% endblock %}
+
+{% block marketplace_content %}
+<section class="landlord-dashboard">
+  <div class="dashboard-heading">
+    <div>
+      <p class="dashboard-eyebrow">Student Accommodation</p>
+      <h1>Listing Dashboard</h1>
+    </div>
+    <a class="btn btn-primary" href="{{ url_for('new_landlord_listing') }}">
+      <span class="material-symbols-outlined" aria-hidden="true">add</span>
+      Add New Listing
+    </a>
+  </div>
+
+  <div class="request-stats">
+    <article class="request-stat">
+      <span class="material-symbols-outlined" aria-hidden="true">home_work</span>
+      <div><span>Total Listings</span><strong>{{ total_listings }}</strong></div>
+    </article>
+    <article class="request-stat">
+      <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
+      <div><span>Pending Requests</span><strong>{{ pending_requests }}</strong></div>
+    </article>
+    <article class="request-stat">
+      <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+      <div><span>Accepted Requests</span><strong>{{ accepted_requests }}</strong></div>
+    </article>
+  </div>
+
+  <section class="requests-table-panel">
+    <div class="landlord-section-heading">
+      <h2>Recent Listing Requests</h2>
+      <span>Showing the latest 20</span>
+    </div>
+    {% if rows %}
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr>
+            <th scope="col">Student</th>
+            <th scope="col">Property</th>
+            <th scope="col">Move-in</th>
+            <th scope="col">Status</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td>{{ row.student.full_name or row.student.username }}</td>
+            <td>{{ row.listing.title }}</td>
+            <td>{{ row.request.move_in_date }}</td>
+            <td><span class="request-status status-{{ row.request.status|lower }}">{{ row.request.status|title }}</span></td>
+            <td class="landlord-table-actions">
+              <a class="btn btn-outline-primary btn-sm" href="{{ url_for('edit_landlord_listing', listing_id=row.listing.id) }}">Edit Listing</a>
+              <a class="btn btn-primary btn-sm" href="{{ url_for('landlord_booking_request', booking_request_id=row.request.id) }}">View</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="dashboard-empty">
+      <span class="material-symbols-outlined" aria-hidden="true">inbox</span>
+      <p>No booking requests have arrived yet.</p>
+      <span>New requests for your listings will appear here.</span>
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="requests-table-panel landlord-listings-panel">
+    <div class="landlord-section-heading">
+      <h2>My Listings</h2>
+      <a href="{{ url_for('new_landlord_listing') }}">Add another listing</a>
+    </div>
+    {% if listings %}
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead>
+          <tr>
+            <th scope="col">Listing</th>
+            <th scope="col">Location</th>
+            <th scope="col">Monthly price</th>
+            <th scope="col">Status</th>
+            <th scope="col"><span class="visually-hidden">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for listing in listings %}
+          <tr>
+            <td>{{ listing.title }}</td>
+            <td>{{ listing.suburb }}, {{ listing.city }}</td>
+            <td>TT$ {{ "%.2f"|format(listing.price_per_month) }}</td>
+            <td><span class="request-status status-{{ listing.status|lower }}">{{ listing.status|title }}</span></td>
+            <td class="landlord-table-actions">
+              <a class="btn btn-outline-primary btn-sm" href="{{ url_for('edit_landlord_listing', listing_id=listing.id) }}">Edit</a>
+              <form method="post" action="{{ url_for('change_landlord_listing_status', listing_id=listing.id) }}">
+                {% if listing.status == "available" %}
+                <input type="hidden" name="active" value="false">
+                <button class="btn btn-outline-danger btn-sm" type="submit" onclick="return confirm('Deactivate this listing? It will no longer appear in student search.')">Deactivate</button>
+                {% else %}
+                <input type="hidden" name="active" value="true">
+                <button class="btn btn-outline-success btn-sm" type="submit">Reactivate</button>
+                {% endif %}
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="dashboard-empty">
+      <span class="material-symbols-outlined" aria-hidden="true">home_work</span>
+      <p>You have not added any listings yet.</p>
+      <a class="btn btn-primary" href="{{ url_for('new_landlord_listing') }}">Create your first listing</a>
+    </div>
+    {% endif %}
+  </section>
+</section>
+{% endblock %}

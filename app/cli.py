@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from datetime import date
 from pathlib import Path
 
 
@@ -53,9 +54,12 @@ def cmd_seed(args: argparse.Namespace) -> None:
     admin / adminpass   (admin)
     """
     from app.database import ensure_db_and_tables, get_cli_session
+    from app.models.listing import Amenity, Listing
+    from app.repositories.listing import ListingRepository
     from app.repositories.user import UserRepository
     from app.schemas.user import AdminCreate, RegularUserCreate
     from app.utilities.security import encrypt_password
+    from sqlmodel import select
 
     _ensure_models_loaded()
     ensure_db_and_tables()
@@ -63,6 +67,7 @@ def cmd_seed(args: argparse.Namespace) -> None:
     demo_users = [
         ("bob", "bob@example.com", "bobpass", "regular_user"),
         ("admin", "admin@example.com", "adminpass", "admin"),
+        ("landlord", "landlord@example.com", "landlordpass", "landlord"),
     ]
 
     created = 0
@@ -86,8 +91,126 @@ def cmd_seed(args: argparse.Namespace) -> None:
             print(f"  create {username} ({role})")
             created += 1
 
+        amenity_names = [
+            "Wi-Fi",
+            "Air conditioning",
+            "Furnished",
+            "Parking",
+            "Laundry",
+            "Kitchen",
+            "Security",
+            "Water included",
+        ]
+        existing_amenities = {
+            amenity.name for amenity in session.exec(select(Amenity)).all()
+        }
+        session.add_all(
+            Amenity(name=name)
+            for name in amenity_names
+            if name not in existing_amenities
+        )
+        session.commit()
+
+        landlord_user = repo.get_by_username("landlord")
+        if landlord_user:
+            listing_repo = ListingRepository(session)
+            seed_listings = [
+                (
+                    "Harbour View Studio",
+                    "1 Bedroom Apartment near UWI St. Augustine",
+                    "Tunapuna-Piarco",
+                    "St. Augustine",
+                    "Eastern Main Road, St. Augustine",
+                    1900,
+                    "Bright one-bedroom apartment near the UWI St. Augustine campus.",
+                    1,
+                    1,
+                    True,
+                    date(2026, 11, 1),
+                ),
+                (
+                    "Garden Room",
+                    "2 Bedroom Apartment in Sangre Grande",
+                    "Sangre Grande",
+                    "Sangre Grande Central",
+                    "Ojoe Road, Sangre Grande",
+                    2450,
+                    "Two-bedroom apartment in Sangre Grande with a balcony and study nook.",
+                    2,
+                    2,
+                    False,
+                    date(2026, 10, 25),
+                ),
+                (
+                    "UWI Terrace Flat",
+                    "1 Bedroom Apartment in San Fernando",
+                    "San Fernando",
+                    "Marabella",
+                    "Southern Main Road, Marabella",
+                    2800,
+                    "Modern one-bedroom apartment in Marabella, San Fernando, with secure parking and laundry access.",
+                    1,
+                    1,
+                    True,
+                    date(2026, 11, 15),
+                ),
+            ]
+            for (
+                legacy_title,
+                title,
+                city,
+                suburb,
+                address,
+                price,
+                description,
+                bedrooms,
+                bathrooms,
+                furnished,
+                available_from,
+            ) in seed_listings:
+                existing = session.exec(
+                    select(Listing).where(
+                        Listing.title.in_([legacy_title, title])
+                    )
+                ).first()
+                if existing:
+                    existing.title = title
+                    existing.landlord_id = landlord_user.id
+                    existing.city = city
+                    existing.suburb = suburb
+                    existing.address = address
+                    existing.price_per_month = price
+                    existing.description = description
+                    existing.bedrooms = bedrooms
+                    existing.bathrooms = bathrooms
+                    existing.furnished = furnished
+                    existing.available_from = available_from
+                    existing.status = "available"
+                    session.add(existing)
+                    session.commit()
+                    print(f"  update listing {title}")
+                    continue
+
+                listing_repo.create(
+                    Listing(
+                        landlord_id=landlord_user.id,
+                        title=title,
+                        city=city,
+                        suburb=suburb,
+                        address=address,
+                        price_per_month=price,
+                        description=description,
+                        bedrooms=bedrooms,
+                        bathrooms=bathrooms,
+                        furnished=furnished,
+                        available_from=available_from,
+                        status="available",
+                    )
+                )
+                print(f"  create listing {title}")
+
     print(f"Seed done — created {created}, skipped {skipped}.")
-    print("Login with bob/bobpass or admin/adminpass")
+    print("Login with bob/bobpass, landlord/landlordpass, or admin/adminpass")
 
 
 def cmd_run(args: argparse.Namespace) -> None:
@@ -103,7 +226,9 @@ def cmd_run(args: argparse.Namespace) -> None:
         use_reload = settings.env.lower() != "production"
     else:
         use_reload = args.reload
-    print(f"Starting FastStarter on http://{bind_host}:{bind_port} (reload={use_reload})")
+    browser_host = "127.0.0.1" if bind_host == "0.0.0.0" else bind_host
+    print(f"Starting FastStarter (listening on {bind_host}:{bind_port}, reload={use_reload})")
+    print(f"Open http://{browser_host}:{bind_port} in your browser")
     uvicorn.run(
         "app.main:app",
         host=bind_host,

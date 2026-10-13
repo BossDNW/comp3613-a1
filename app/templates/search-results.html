@@ -1,0 +1,98 @@
+{% extends "accommodation-base.html" %}
+{% block title %}Search Results{% endblock %}
+
+{% block marketplace_content %}
+<div class="marketplace-layout">
+  <aside class="filters-panel">
+    <h1 class="section-title">Filters</h1>
+    <form method="get" action="{{ url_for('accommodation_results_view') }}">
+      <input type="hidden" name="location" value="{{ filters.location }}">
+      <div class="filter-field">
+        <label for="results-max-price">Maximum price per month</label>
+        <input class="form-control" id="results-max-price" name="max_price" type="number" min="0" step="50" value="{{ filters.max_price }}" placeholder="Any price">
+      </div>
+      <div class="filter-field">
+        <label for="results-available-from">Move-in date</label>
+        <input class="form-control" id="results-available-from" name="available_from" type="date" value="{{ filters.available_from }}">
+      </div>
+      <div class="filter-field">
+        <label for="results-bedrooms">Minimum bedrooms</label>
+        <input class="form-control" id="results-bedrooms" name="bedrooms" type="number" min="0" value="{{ filters.bedrooms }}" placeholder="Any">
+      </div>
+      <div class="filter-field">
+        <label for="results-bathrooms">Minimum bathrooms</label>
+        <input class="form-control" id="results-bathrooms" name="bathrooms" type="number" min="0" value="{{ filters.bathrooms }}" placeholder="Any">
+      </div>
+      <div class="filter-field">
+        <label for="results-furnished">Furnished status</label>
+        <select class="form-select" id="results-furnished" name="furnished">
+          <option value="" {% if not filters.furnished %}selected{% endif %}>Any</option>
+          <option value="true" {% if filters.furnished == "true" %}selected{% endif %}>Furnished</option>
+          <option value="false" {% if filters.furnished == "false" %}selected{% endif %}>Unfurnished</option>
+        </select>
+      </div>
+      <button class="btn btn-outline-primary w-100 mt-2" type="submit">Apply filters</button>
+      <a class="btn btn-link w-100 mt-1" href="{{ url_for('user_home_view') }}">Clear filters</a>
+    </form>
+  </aside>
+
+  <section class="search-content" aria-labelledby="results-heading">
+    <form class="search-toolbar mb-4" method="get" action="{{ url_for('accommodation_results_view') }}">
+      <label class="visually-hidden" for="results-location">City or suburb</label>
+      <span class="material-symbols-outlined" aria-hidden="true">search</span>
+      <input id="results-location" name="location" type="search" value="{{ filters.location }}" placeholder="Search by city or suburb">
+      <input type="hidden" name="max_price" value="{{ filters.max_price }}">
+      <input type="hidden" name="available_from" value="{{ filters.available_from }}">
+      <input type="hidden" name="bedrooms" value="{{ filters.bedrooms }}">
+      <input type="hidden" name="bathrooms" value="{{ filters.bathrooms }}">
+      <input type="hidden" name="furnished" value="{{ filters.furnished }}">
+      <button class="btn btn-primary" type="submit">Search</button>
+    </form>
+
+    <div class="results-heading">
+      <div>
+        <h1 id="results-heading">Search Results</h1>
+        <p>
+          Showing {{ listings|length }} result{% if listings|length != 1 %}s{% endif %}
+          {% if filters.location %}for “{{ filters.location }}”{% endif %}
+          with applied filters.
+        </p>
+      </div>
+      <a class="back-link" href="{{ url_for('user_home_view') }}">Back to search</a>
+    </div>
+
+    {% if listings %}
+    <div class="listing-results">
+      {% for listing in listings %}
+      {% set card_photos = listing_photos.get(listing.id, []) if listing.id is not none else [] %}
+      <article class="listing-result-card">
+        <a class="result-card-photo" href="{{ url_for('listing_detail_view', listing_id=listing.id) }}?from=results&amp;return_query={{ request.url.query|urlencode }}" aria-label="View {{ listing.title }}">
+          {% if card_photos %}
+          <img src="{{ card_photos[0].image_url }}" alt="{{ listing.title }}">
+          {% else %}
+          <span class="material-symbols-outlined photo-placeholder-icon" aria-hidden="true">home_work</span>
+          {% endif %}
+        </a>
+        <div class="result-card-body">
+          <div>
+            <h2>{{ listing.title }}</h2>
+            <p class="listing-location">{{ listing.suburb }}, {{ listing.city }}</p>
+            <strong class="result-price">TT$ {{ "%.0f"|format(listing.price_per_month) }} <span>/ month</span></strong>
+            <p class="result-specs">{{ listing.bedrooms }} bedroom{% if listing.bedrooms != 1 %}s{% endif %} · {{ listing.bathrooms }} bathroom{% if listing.bathrooms != 1 %}s{% endif %}</p>
+          </div>
+          <a class="btn btn-outline-primary btn-sm" href="{{ url_for('listing_detail_view', listing_id=listing.id) }}?from=results&amp;return_query={{ request.url.query|urlencode }}">View Details</a>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-results">
+      <span class="material-symbols-outlined" aria-hidden="true">search_off</span>
+      <h2>No matches found</h2>
+      <p>Try adjusting the filters or searching another location.</p>
+      <a class="btn btn-primary" href="{{ url_for('user_home_view') }}">Clear filters</a>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

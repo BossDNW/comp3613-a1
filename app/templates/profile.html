@@ -1,0 +1,93 @@
+{% extends "accommodation-base.html" %}
+{% block title %}Profile Settings{% endblock %}
+
+{% block marketplace_content %}
+<section class="profile-page">
+  <header class="profile-page-heading">
+    <p class="profile-eyebrow">Account</p>
+    <h1>Profile Settings</h1>
+    <p>Update your name or password, manage your account, or sign out.</p>
+  </header>
+
+  {% if error %}
+  <div class="alert alert-danger" role="alert">{{ error }}</div>
+  {% endif %}
+
+  <section class="profile-panel">
+    <div class="profile-panel-heading">
+      <span class="material-symbols-outlined" aria-hidden="true">person</span>
+      <div>
+        <h2>Personal Information</h2>
+        <p>Your username is used to sign in and is not changed here.</p>
+      </div>
+    </div>
+
+    <form method="post" action="{{ url_for('update_profile') }}">
+      <div class="profile-field">
+        <label for="profile-username">Username</label>
+        <input class="form-control" id="profile-username" value="{{ profile.username }}" disabled>
+      </div>
+      <div class="profile-field">
+        <label for="profile-email">Email</label>
+        <input class="form-control" id="profile-email" value="{{ profile.email }}" disabled>
+      </div>
+      <div class="profile-field">
+        <label for="profile-full-name">Full name</label>
+        <input class="form-control" id="profile-full-name" name="full_name" value="{{ profile.full_name or '' }}" maxlength="120" required>
+      </div>
+
+      <div class="profile-divider"></div>
+
+      <div class="profile-panel-heading">
+        <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+        <div>
+          <h2>Change Password</h2>
+          <p>Leave these fields empty if you don’t want to change your password.</p>
+        </div>
+      </div>
+      <div class="profile-field">
+        <label for="current-password">Current password</label>
+        <input class="form-control" id="current-password" name="current_password" type="password" autocomplete="current-password">
+      </div>
+      <div class="profile-password-grid">
+        <div class="profile-field">
+          <label for="new-password">New password</label>
+          <input class="form-control" id="new-password" name="new_password" type="password" minlength="8" autocomplete="new-password">
+        </div>
+        <div class="profile-field">
+          <label for="confirm-password">Confirm new password</label>
+          <input class="form-control" id="confirm-password" name="confirm_password" type="password" minlength="8" autocomplete="new-password">
+        </div>
+      </div>
+      <div class="profile-actions">
+        <button class="btn btn-primary" type="submit">Save Changes</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="profile-panel profile-account-actions">
+    <div class="profile-panel-heading">
+      <span class="material-symbols-outlined" aria-hidden="true">manage_accounts</span>
+      <div>
+        <h2>Account Actions</h2>
+        <p>Sign out of this account or permanently delete it.</p>
+      </div>
+    </div>
+
+    <a class="btn btn-outline-secondary" href="{{ url_for('logout') }}">Log Out</a>
+
+    <form class="delete-account-form" method="post" action="{{ url_for('delete_profile') }}"
+          onsubmit="return confirm('Permanently delete your account, listings, and booking requests? This cannot be undone.');">
+      <div class="profile-field">
+        <label for="delete-current-password">Current password to confirm deletion</label>
+        <input class="form-control" id="delete-current-password" name="current_password" type="password" autocomplete="current-password" required>
+      </div>
+      <label class="delete-confirmation">
+        <input class="form-check-input" type="checkbox" name="confirm_delete" value="yes" required>
+        <span>I understand that my account, listings, and booking requests will be permanently deleted.</span>
+      </label>
+      <button class="btn btn-danger" type="submit">Delete Account</button>
+    </form>
+  </section>
+</section>
+{% endblock %}

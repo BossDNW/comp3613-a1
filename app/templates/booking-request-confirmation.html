@@ -1,0 +1,25 @@
+{% extends "accommodation-base.html" %}
+{% block title %}Booking Request Sent{% endblock %}
+
+{% block marketplace_content %}
+<section class="booking-confirmation">
+  <div class="confirmation-check">
+    <span class="material-symbols-outlined" aria-hidden="true">check</span>
+  </div>
+  <h1>Booking Request Sent!</h1>
+  <p class="confirmation-lead">Your request for <strong>{{ listing.title }}</strong> has been sent to the landlord.</p>
+  <div class="confirmation-status">
+    <strong>Request Details</strong>
+    <span>Status: <b>{{ booking_request.status|title }}</b></span>
+    <span>Move-in: {{ booking_request.move_in_date }}</span>
+    {% if booking_request.move_out_date %}
+    <span>Move-out: {{ booking_request.move_out_date }}</span>
+    {% endif %}
+    <span>Occupants: {{ booking_request.occupants }}</span>
+  </div>
+  <div class="confirmation-actions">
+    <a class="btn btn-outline-primary" href="{{ url_for('user_home_view') }}">Back to Listings</a>
+    <a class="btn btn-primary" href="{{ url_for('student_booking_requests') }}">My Requests</a>
+  </div>
+</section>
+{% endblock %}
