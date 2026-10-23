@@ -228,11 +228,28 @@ def export_report(
             "(runs student-judge -> docs/judge.md), then re-run this command."
         )
     app_url, logins, missing = _marker_access(markdown)
+    repository_url, youtube_url, agents_used = _submission_cover_metadata(markdown)
+    if not repository_url:
+        missing.append("GitHub repository URL")
+    if not youtube_url:
+        missing.append("YouTube URL")
+    if not agents_used:
+        missing.append("agents used")
     dest.parent.mkdir(parents=True, exist_ok=True)
 
     pdf = _new_pdf(bool(missing))
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
-        cover = _cover_html(clean_name, clean_id, app_url, logins, integrity, missing)
+        cover = _cover_html(
+            clean_name,
+            clean_id,
+            app_url,
+            logins,
+            repository_url,
+            youtube_url,
+            agents_used,
+            integrity,
+            missing,
+        )
         body = _markdown_to_html(markdown, src.parent, Path(tmp))
         appendix = _markdown_to_html(
             appendix_markdown(transcripts),
@@ -582,6 +599,9 @@ def _cover_html(
     student_id: str,
     app_url: str,
     logins: str,
+    repository_url: str,
+    youtube_url: str,
+    agents_used: str,
     integrity: IntegrityResult,
     missing: list[str],
 ) -> str:
@@ -597,6 +617,9 @@ def _cover_html(
         ("Student ID", html_lib.escape(student_id), False),
         ("Deployed app", html_lib.escape(app_url), False),
         ("Logins", login_html, False),
+        ("GitHub repository", html_lib.escape(repository_url), False),
+        ("YouTube URL", html_lib.escape(youtube_url), False),
+        ("Agents used", html_lib.escape(agents_used), False),
         ("Skill integrity", integrity_value, not integrity.ok),
     ]
     cells = []
@@ -675,6 +698,26 @@ def _marker_access(markdown: str) -> tuple[str, str, list[str]]:
     else:
         login_text = "\n".join(login_lines)
     return app_url, login_text, missing
+
+
+def _submission_cover_metadata(markdown: str) -> tuple[str, str, str]:
+    """Read repository, video, and agent details for the PDF cover."""
+    details = _section(markdown, "submission details")
+    repository_match = re.search(
+        r"(?im)^\s*-\s*GitHub repository:\s*(https?://\S+)\s*$",
+        details,
+    )
+    agents_match = re.search(
+        r"(?im)^\s*-\s*Agents used:\s*(.+?)\s*$",
+        details,
+    )
+    youtube = _section(markdown, "youtube url")
+    youtube_match = re.search(r"https?://\S+", youtube)
+    return (
+        repository_match.group(1) if repository_match else "",
+        youtube_match.group(0) if youtube_match else "",
+        agents_match.group(1) if agents_match else "",
+    )
 
 
 def _markdown_to_html(markdown: str, base: Path, tmp: Path) -> str:
