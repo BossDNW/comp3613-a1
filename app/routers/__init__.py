@@ -26,4 +26,5 @@ from . import (
     users,
     logout,
     server_config,
+    accommodation_api,
 )
